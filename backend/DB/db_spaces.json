@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1748911949024,
+    "nome": "Teste de Espaço novo",
+    "capacidade": 100,
+    "ocupacoes": [
+      {
+        "data": "2025-06-17",
+        "usuarioId": "1",
+        "eventoId": "1748911483911"
+      }
+    ]
+  },
+  {
+    "id": 1748912275346,
+    "nome": "gggdeydgey",
+    "capacidade": 65,
+    "ocupacoes": [
+      {
+        "data": "2025-06-17",
+        "usuarioId": "1",
+        "eventoId": "1748911483911"
+      }
+    ]
+  },
+  {
+    "id": 1748912519059,
+    "nome": "Quadra do Bairro Jardim Das Oliveiras",
+    "capacidade": 200,
+    "ocupacoes": [
+      {
+        "data": "2025-06-25",
+        "usuarioId": "4",
+        "eventoId": "1748912444041"
+      }
+    ]
+  },
+  {
+    "id": 1748912603369,
+    "nome": "Quadra",
+    "capacidade": 20,
+    "ocupacoes": []
+  },
+  {
+    "id": 1748912621670,
+    "nome": "Igreja - 20 - 06 -2025",
+    "capacidade": 50,
+    "ocupacoes": []
+  },
+  {
+    "id": 1748912642601,
+    "nome": "Quadra - 03/07/25",
+    "capacidade": 20,
+    "ocupacoes": []
+  },
+  {
+    "id": 1748912666257,
+    "nome": "Pista de corrida - 08/08/25",
+    "capacidade": 50,
+    "ocupacoes": []
+  }
+]
