@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>SmartCommunity - Painel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .sidebar {
+      width: 240px;
+      background-color: #001f3f;
+      color: white;
+      padding: 30px 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar h4 {
+      font-weight: bold;
+      color: #ffffff;
+      margin-bottom: 30px;
+    }
+
+    .sidebar .nav-btn {
+      background-color: transparent;
+      color: #ffffff;
+      border: none;
+      text-align: left;
+      padding: 10px 15px;
+      border-radius: 6px;
+      transition: background-color 0.2s ease;
+      font-size: 16px;
+    }
+
+    .sidebar .nav-btn:hover {
+      background-color: #004080;
+      color: #fff;
+    }
+
+    .sidebar .nav-btn i {
+      margin-right: 8px;
+    }
+
+    .main-content {
+      flex-grow: 1;
+      background-color: #f8f9fa;
+      padding: 40px;
+      overflow-y: auto;
+    }
+
+    .admin-only {
+      display: none;
+    }
+
+    .logout-btn {
+      margin-top: auto;
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h4>SmartCommunity</h4>
+    <button class="nav-btn" onclick="window.location.href='eventos.html'">
+  <i class="bi bi-calendar-event"></i> Eventos
+</button>
+
+    <button class="nav-btn" onclick="window.location.href='espacos.html'">
+      <i class="bi bi-house-door"></i> Espaços
+    </button>
+    <button class="nav-btn admin-only" onclick="mostrarAprovacao()">
+      <i class="bi bi-check-circle"></i> Aprovar Evento
+    </button>
+    <hr class="text-white">
+    <button class="nav-btn logout-btn" onclick="logout()">
+      <i class="bi bi-box-arrow-right"></i> Sair
+    </button>
+  </div>
+
+  <!-- Conteúdo principal -->
+  <div class="main-content">
+    <div id="conteudo">
+      <h3>Bem-vindo!</h3>
+      <p>Selecione uma opção à esquerda para começar.</p>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    const perfil = localStorage.getItem('perfil');
+
+    if (!token) {
+      alert('Acesso não autorizado. Faça login.');
+      window.location.href = 'login.html';
+    }
+
+    if (perfil === 'admin') {
+      document.querySelector('.admin-only').style.display = 'block';
+    }
+
+    function mostrarEventos() {
+      document.getElementById('conteudo').innerHTML = `
+        <h4><i class="bi bi-calendar-event"></i> Eventos</h4>
+        <p>Aqui aparecerá a listagem dos eventos cadastrados.</p>`;
+    }
+
+    function mostrarEspacos() {
+      document.getElementById('conteudo').innerHTML = `
+        <h4><i class="bi bi-house-door"></i> Espaços</h4>
+        <p>Aqui aparecerá a listagem dos espaços disponíveis.</p>`;
+    }
+
+    function mostrarAprovacao() {
+      document.getElementById('conteudo').innerHTML = `
+        <h4><i class="bi bi-check-circle"></i> Aprovar Evento</h4>
+        <p>Somente administradores podem aprovar eventos.</p>`;
+    }
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = 'login.html';
+    }
+  </script>
+
+</body>
+</html>

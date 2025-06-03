@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Espaços - SmartCommunity</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body {
+      display: flex;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .sidebar {
+      width: 240px;
+      background-color: #001f3f;
+      color: white;
+      padding: 1rem;
+    }
+
+    .sidebar h4 {
+      margin-bottom: 2rem;
+    }
+
+    .nav-btn {
+      width: 100%;
+      text-align: left;
+      margin-bottom: 1rem;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.1rem;
+    }
+
+    .nav-btn:hover {
+      text-decoration: underline;
+    }
+
+    .content {
+      flex: 1;
+      padding: 2rem;
+      background-color: #f8f9fa;
+      overflow-y: auto;
+    }
+
+    .admin-only {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h4>SmartCommunity</h4>
+    <button class="nav-btn" onclick="window.location.href='index.html'">
+      <i class="bi bi-house-door"></i> Início
+    </button>
+    <button class="nav-btn" onclick="window.location.href='eventos.html'">
+      <i class="bi bi-calendar-event"></i> Eventos
+    </button>
+    <button class="nav-btn" onclick="window.location.href='espacos.html'">
+      <i class="bi bi-building"></i> Espaços
+    </button>
+    <button class="nav-btn admin-only" onclick="window.location.href='aprovacao.html'">
+      <i class="bi bi-check-circle"></i> Aprovar Eventos
+    </button>
+  </div>
+
+  <div class="content">
+    <h2>Espaços</h2>
+
+    <div class="admin-only mb-4">
+      <h5>Criar Novo Espaço</h5>
+      <form id="formEspaco" class="mb-3">
+        <input type="text" class="form-control mb-2" id="nomeEspaco" placeholder="Nome do espaço" required />
+        <input type="number" class="form-control mb-2" id="capacidadeEspaco" placeholder="Capacidade" required />
+        <button type="submit" class="btn btn-primary">Cadastrar Espaço</button>
+      </form>
+    </div>
+
+    <ul id="listaEspacos" class="list-group"></ul>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="modalEventos" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Selecionar Evento</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <select id="selectEvento" class="form-select"></select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" onclick="confirmarAlocacao()">Confirmar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const API = 'http://localhost:3000';
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('userId');
+    const perfil = localStorage.getItem('perfil');
+
+    if (!token) {
+      alert('Acesso negado. Faça login primeiro.');
+      window.location.href = 'login.html';
+    }
+
+    if (perfil === 'admin') {
+      document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+    }
+
+    let espacoSelecionado = null;
+    let eventosCache = [];
+
+    async function carregarEspacos() {
+      const res = await fetch(`${API}/spaces`);
+      const spaces = await res.json();
+
+      const lista = document.getElementById('listaEspacos');
+      lista.innerHTML = '';
+
+      const eventos = eventosCache.length ? eventosCache : await (await fetch(API + '/events')).json();
+      eventosCache = eventos;
+
+      spaces.forEach(s => {
+        const item = document.createElement('li');
+        item.classList.add('list-group-item');
+
+        const ocupacoes = Array.isArray(s.ocupacoes) ? s.ocupacoes : [];
+        const estaOcupado = ocupacoes.length > 0;
+
+        let descricaoOcupacoes = 'Nenhuma';
+
+        if (estaOcupado) {
+          descricaoOcupacoes = ocupacoes.map(o => {
+            if (typeof o === 'object') {
+              const evento = eventos.find(e => e.id == o.eventoId);
+              const nomeEvento = evento?.nome || 'Evento desconhecido';
+              return `${o.data} (${nomeEvento})`;
+            } else {
+              return String(o);
+            }
+          }).join(', ');
+        }
+
+        item.innerHTML = `
+          <strong>${s.nome}</strong> - Capacidade: ${s.capacidade}<br/>
+          Ocupações: ${descricaoOcupacoes}
+          ${!estaOcupado ? `<button class="btn btn-sm btn-success float-end" onclick="abrirModal(${s.id})">Alocar Evento</button>` : ''}
+        `;
+
+        lista.appendChild(item);
+      });
+    }
+
+    async function abrirModal(espacoId) {
+      espacoSelecionado = espacoId;
+      const res = await fetch(API + '/events');
+      const eventos = await res.json();
+      eventosCache = eventos;
+
+      const eventosUsuario = eventos.filter(e => e.usuarioId == userId && e.status === 'pendente');
+      const select = document.getElementById('selectEvento');
+      select.innerHTML = '';
+
+      eventosUsuario.forEach(ev => {
+        const opt = document.createElement('option');
+        opt.value = ev.data;
+        opt.textContent = `${ev.nome} - ${ev.data}`;
+        opt.dataset.eventoId = ev.id;
+        select.appendChild(opt);
+      });
+
+      if (eventosUsuario.length === 0) {
+        select.innerHTML = `<option disabled>Nenhum evento pendente</option>`;
+      }
+
+      new bootstrap.Modal(document.getElementById('modalEventos')).show();
+    }
+
+    async function confirmarAlocacao() {
+      const select = document.getElementById('selectEvento');
+      const data = select.value;
+      const eventoId = select.options[select.selectedIndex].dataset.eventoId;
+
+      if (!data || !eventoId || !espacoSelecionado) return;
+
+      const res = await fetch(API + '/spaces/registrar-ocupacao', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          espacoId: espacoSelecionado,
+          data,
+          usuarioId: userId,
+          eventoId: eventoId
+        })
+      });
+
+      if (res.ok) {
+        alert('Espaço alocado com sucesso!');
+        bootstrap.Modal.getInstance(document.getElementById('modalEventos')).hide();
+        carregarEspacos();
+      } else {
+        alert('Erro ao alocar espaço.');
+      }
+    }
+
+    document.getElementById('formEspaco')?.addEventListener('submit', async e => {
+      e.preventDefault();
+      const nome = document.getElementById('nomeEspaco').value;
+      const capacidade = parseInt(document.getElementById('capacidadeEspaco').value);
+
+      const res = await fetch(API + '/spaces', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ nome, capacidade })
+      });
+
+      if (res.ok) {
+        alert('Espaço cadastrado com sucesso!');
+        document.getElementById('formEspaco').reset();
+        carregarEspacos();
+      } else {
+        alert('Erro ao cadastrar espaço.');
+      }
+    });
+
+    carregarEspacos();
+  </script>
+</body>
+</html>
